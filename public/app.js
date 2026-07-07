@@ -80,18 +80,28 @@ if (!SpeechRecognitionAPI) {
   };
 
   recognizer.onerror = (event) => {
-    micStatus.textContent =
-      event.error === "not-allowed"
-        ? "Microphone permission was blocked — allow it in your browser's site settings."
-        : "Couldn't catch that — please try again.";
+    console.error("Speech recognition error:", event.error);
+    const messages = {
+      "not-allowed": "Microphone permission was blocked — allow it in your browser's site settings.",
+      "audio-capture": "No microphone was found on this device.",
+      "network": "Network problem reaching the speech service — check your internet connection.",
+      "no-speech": "Didn't hear anything — please try again and speak right after the beep.",
+      "aborted": "Listening was stopped before you finished.",
+    };
+    micStatus.textContent = messages[event.error] || `Couldn't catch that (reason: ${event.error}). Please try again.`;
+    micStatus.dataset.isError = "true";
   };
 
   recognizer.onend = () => {
     isListening = false;
     micBtn.classList.remove("listening");
+    const holdTime = micStatus.dataset.isError === "true" ? 8000 : 2500;
     setTimeout(() => {
-      if (!isListening) micStatus.hidden = true;
-    }, 2500);
+      if (!isListening) {
+        micStatus.hidden = true;
+        micStatus.dataset.isError = "false";
+      }
+    }, holdTime);
   };
 
   micBtn.addEventListener("click", () => {
