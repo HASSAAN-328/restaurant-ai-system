@@ -673,15 +673,83 @@ input:focus-visible {
   position: relative;
   z-index: 1;
   margin-top: 20px;
-  padding: 22px 20px 28px;
-  text-align: center;
+  padding: 48px 32px 28px;
   border-top: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(201, 162, 76, 0.05), transparent);
+  overflow: hidden;
+}
+
+.footer-glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(500px 220px at 50% 0%, rgba(201, 162, 76, 0.08), transparent 70%);
+}
+
+.footer-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr;
+  gap: 32px;
+  text-align: left;
+}
+
+.footer-brand { padding-right: 12px; }
+.footer-wordmark {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 24px;
+  color: var(--gold-bright);
+  text-shadow: 0 0 24px rgba(201, 162, 76, 0.18);
+}
+.footer-tagline {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 34ch;
+}
+
+.footer-col-title {
+  margin: 0 0 8px;
+  font-family: var(--font-utility);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+}
+.footer-col-text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.footer-divider {
+  max-width: 1000px;
+  margin: 36px auto 20px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+}
+
+.footer-bottom {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   font-family: var(--font-utility);
 }
 .footer-copyright {
-  margin: 0 0 4px;
-  font-size: 12.5px;
-  color: var(--muted);
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-dim);
 }
 .footer-credit {
   margin: 0;
@@ -693,7 +761,20 @@ input:focus-visible {
   font-weight: 600;
 }
 
-@media (max-width: 560px) {
-  .site-footer { padding: 18px 16px 22px; }
-  .footer-copyright, .footer-credit { font-size: 11.5px; }
+@media (max-width: 760px) {
+  .site-footer { padding: 36px 20px 22px; }
+  .footer-inner {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    text-align: center;
+  }
+  .footer-brand { padding-right: 0; }
+  .footer-tagline { max-width: none; margin: 0 auto; }
+  .footer-bottom {
+    justify-content: center;
+    text-align: center;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .footer-divider { margin: 28px auto 16px; }
 }
