@@ -156,6 +156,46 @@ input:focus-visible {
   .layout { grid-template-columns: 1fr; padding: 20px; gap: 16px; }
 }
 
+/* Tablets (portrait) */
+@media (max-width: 760px) {
+  .topbar { padding: 40px 20px 30px; }
+  .panel { padding: 18px; }
+  .menu-list { max-height: 380px; }
+  .chat-window { min-height: 280px; max-height: 380px; }
+}
+
+/* Phones */
+@media (max-width: 560px) {
+  .topbar { padding: 32px 16px 24px; }
+  .subtitle { font-size: 13.5px; }
+  .layout { padding: 12px; gap: 12px; }
+  .panel { padding: 14px; border-radius: 10px; }
+  .panel-head h2 { font-size: 20px; }
+  .menu-list { max-height: 260px; }
+  .chat-window { min-height: 240px; max-height: 320px; }
+  .bubble { max-width: 92%; font-size: 14px; }
+
+  /* Chat controls wrap onto their own row instead of squeezing sideways */
+  .chat-form { flex-wrap: wrap; }
+  .chat-form input {
+    flex: 1 1 100%;
+    order: 1;
+  }
+  .mic-lang { order: 2; flex: 0 0 auto; }
+  .btn-mic { order: 3; flex: 0 0 auto; }
+  .btn-send { order: 4; flex: 0 0 auto; margin-left: auto; }
+
+  .btn-icon-toggle { width: 34px; height: 34px; } /* slightly bigger tap target */
+  .btn-mic, .btn-send { width: 48px; } /* comfortable thumb target */
+}
+
+/* Small phones */
+@media (max-width: 380px) {
+  .wordmark { font-size: 34px; }
+  .eyebrow { font-size: 10px; }
+  .panel-index { display: none; } /* saves horizontal space in panel headers */
+}
+
 .panel {
   position: relative;
   background: var(--panel);
@@ -624,4 +664,36 @@ input:focus-visible {
 }
 @keyframes toast-out {
   to { opacity: 0; transform: translateY(-6px); }
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.site-footer {
+  position: relative;
+  z-index: 1;
+  margin-top: 20px;
+  padding: 22px 20px 28px;
+  text-align: center;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-utility);
+}
+.footer-copyright {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.footer-credit {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-dim);
+}
+.footer-dev-name {
+  color: var(--gold-bright);
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .site-footer { padding: 18px 16px 22px; }
+  .footer-copyright, .footer-credit { font-size: 11.5px; }
 }
