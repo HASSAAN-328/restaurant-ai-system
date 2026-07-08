@@ -4,7 +4,7 @@ An intelligent Restaurant Management System built to simplify restaurant operati
 
 ## 🌐 Live Demo
 
-👉 **https://restaurant-ai-system-six.vercel.app/**
+👉 **https://restaurant-ai-system-one.vercel.app/**
 
 ---
 
