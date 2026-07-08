@@ -76,7 +76,7 @@ app.use("/api/inventory", inventoryRoutes);
 // Serve the frontend (public folder) so the whole app runs from one server
 app.use(
   express.static(path.join(__dirname, "..", "public"), {
-    maxAge: process.env.VERCEL ? "1h" : 0, // no caching in local dev, so you always see your latest changes
+    maxAge: 0, // always re-check for the latest CSS/JS — this project's files are tiny anyway
   })
 );
 
