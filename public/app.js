@@ -393,4 +393,7 @@ document.getElementById("advance-status-btn").addEventListener("click", async (e
   }
 });
 
+const footerYearEl = document.getElementById("footer-year");
+if (footerYearEl) footerYearEl.textContent = new Date().getFullYear();
+
 loadMenu();
