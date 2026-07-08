@@ -48,72 +48,118 @@ document.getElementById("speaker-toggle").addEventListener("click", () => {
 updateSpeakerButton();
 
 // ---- Speech-to-text (mic button — speak your order in Urdu or English) ----
+// Mobile note: iPhone/iPad browsers (Safari, and even Chrome on iOS, which is
+// forced to use Safari's engine by Apple) do not support this API at all —
+// that's an Apple platform limitation, not something fixable from our code.
+// Android Chrome DOES support it, but has a known bug where reusing the same
+// recognizer object stops returning results after the first use — so below
+// we create a brand new recognizer every time the mic button is tapped.
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 const micBtn = document.getElementById("btn-mic");
 const micStatus = document.getElementById("mic-status");
 let recognizer = null;
 let isListening = false;
+let startTimeoutId = null;
+
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+function showMicStatus(text, isError = false) {
+  micStatus.hidden = false;
+  micStatus.textContent = text;
+  micStatus.dataset.isError = isError ? "true" : "false";
+  clearTimeout(showMicStatus._t);
+  showMicStatus._t = setTimeout(() => {
+    if (!isListening) micStatus.hidden = true;
+  }, isError ? 8000 : 2500);
+}
+
+function resetMicUI() {
+  isListening = false;
+  micBtn.classList.remove("listening");
+  clearTimeout(startTimeoutId);
+}
 
 if (!SpeechRecognitionAPI) {
   micBtn.disabled = true;
-  micBtn.title = "Voice input isn't supported in this browser — try Chrome or Edge.";
   micBtn.style.opacity = "0.4";
+  micBtn.title = isIOS
+    ? "Voice input isn't available on iPhone/iPad browsers (an Apple restriction) — please type instead."
+    : "Voice input isn't supported in this browser — try Chrome or Edge.";
 } else {
-  recognizer = new SpeechRecognitionAPI();
-  recognizer.continuous = false;
-  recognizer.interimResults = false;
-  recognizer.maxAlternatives = 1;
-
-  recognizer.onstart = () => {
-    isListening = true;
-    micBtn.classList.add("listening");
-    micStatus.hidden = false;
-    micStatus.textContent = "Listening… speak now.";
-  };
-
-  recognizer.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    document.getElementById("chat-input").value = transcript;
-    micStatus.textContent = `Heard: "${transcript}" — sending…`;
-    // Send it straight through, same as typing + pressing Enter.
-    document.getElementById("chat-form").requestSubmit();
-  };
-
-  recognizer.onerror = (event) => {
-    console.error("Speech recognition error:", event.error);
-    const messages = {
-      "not-allowed": "Microphone permission was blocked — allow it in your browser's site settings.",
-      "audio-capture": "No microphone was found on this device.",
-      "network": "Network problem reaching the speech service — check your internet connection.",
-      "no-speech": "Didn't hear anything — please try again and speak right after the beep.",
-      "aborted": "Listening was stopped before you finished.",
-    };
-    micStatus.textContent = messages[event.error] || `Couldn't catch that (reason: ${event.error}). Please try again.`;
-    micStatus.dataset.isError = "true";
-  };
-
-  recognizer.onend = () => {
-    isListening = false;
-    micBtn.classList.remove("listening");
-    const holdTime = micStatus.dataset.isError === "true" ? 8000 : 2500;
-    setTimeout(() => {
-      if (!isListening) {
-        micStatus.hidden = true;
-        micStatus.dataset.isError = "false";
-      }
-    }, holdTime);
-  };
-
-  micBtn.addEventListener("click", () => {
+  micBtn.addEventListener("click", async () => {
     if (isListening) {
-      recognizer.stop();
+      resetMicUI();
+      if (recognizer) recognizer.stop();
       return;
     }
+
+    // Ask for the microphone explicitly first. On mobile browsers this gives
+    // a clearer, more reliable permission prompt and lets us show an exact
+    // reason if it's denied, instead of the mic silently doing nothing.
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop()); // we only needed the permission check
+      } catch (err) {
+        console.error("Microphone permission error:", err);
+        showMicStatus(
+          err.name === "NotFoundError"
+            ? "No microphone was found on this device."
+            : "Microphone permission was blocked — allow it in your browser's site settings, then try again.",
+          true
+        );
+        return;
+      }
+    }
+
+    // Fresh instance every tap (works around the Android Chrome reuse bug).
+    recognizer = new SpeechRecognitionAPI();
+    recognizer.continuous = false;
+    recognizer.interimResults = false;
+    recognizer.maxAlternatives = 1;
     recognizer.lang = document.getElementById("mic-lang").value;
+
+    recognizer.onstart = () => {
+      clearTimeout(startTimeoutId);
+      isListening = true;
+      micBtn.classList.add("listening");
+      showMicStatus("Listening… speak now.");
+    };
+
+    recognizer.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById("chat-input").value = transcript;
+      showMicStatus(`Heard: "${transcript}" — sending…`);
+      document.getElementById("chat-form").requestSubmit();
+    };
+
+    recognizer.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      const messages = {
+        "not-allowed": "Microphone permission was blocked — allow it in your browser's site settings.",
+        "audio-capture": "No microphone was found on this device.",
+        "network": "Network problem reaching the speech service — check your internet connection.",
+        "no-speech": "Didn't hear anything — please try again and speak right after the beep.",
+        "aborted": "Listening was stopped before you finished.",
+      };
+      showMicStatus(messages[event.error] || `Couldn't catch that (reason: ${event.error}). Please try again.`, true);
+    };
+
+    recognizer.onend = resetMicUI;
+
     try {
       recognizer.start();
-    } catch {
-      /* already running — ignore */
+      // Safety net: some mobile browsers never fire onstart/onerror if
+      // something goes wrong internally — this stops the button getting
+      // stuck showing "listening" forever.
+      startTimeoutId = setTimeout(() => {
+        if (!isListening) {
+          showMicStatus("Voice input didn't start — please try again.", true);
+        }
+      }, 5000);
+    } catch (err) {
+      console.error("Couldn't start recognizer:", err);
+      showMicStatus("Couldn't start listening — please try again.", true);
     }
   });
 }
